@@ -1,0 +1,19 @@
+{
+  "name": "clone-all-gists",
+  "description": "clone all gists for a user",
+  "author": "sametcn99",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "prettier": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "3.3.3"
+  },
+  "dependencies": {
+    "inquirer": "^10.1.8",
+    "octokit": "^4.0.2"
+  }
+}
