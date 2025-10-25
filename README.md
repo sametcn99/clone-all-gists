@@ -11,7 +11,7 @@ This script downloads all public gists for a specified GitHub user and saves the
 
 ## Prerequisites
 
-- Node.js installed on your machine.
+- bun.js installed on your machine.
 - A valid GitHub token with the necessary permissions to access gists.
 
 ## Installation
@@ -26,7 +26,7 @@ This script downloads all public gists for a specified GitHub user and saves the
 2. Install the required dependencies.
 
    ```bash
-   npm install
+   bun install
    ```
 
 ## Usage
@@ -34,7 +34,7 @@ This script downloads all public gists for a specified GitHub user and saves the
 1. Run the script:
 
    ```bash
-   npm run start
+   bun run start
    ```
 
 2. When prompted, enter your GitHub token and the GitHub username whose gists you want to download.

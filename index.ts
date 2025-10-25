@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/useNodejsImportProtocol: . */
 import { Octokit } from 'octokit'
 import { input } from '@inquirer/prompts'
 import { writeFileSync, mkdirSync } from 'fs'
@@ -15,18 +16,18 @@ async function promptForGithubToken() {
         message: 'Enter your GitHub token',
         validate: validateGithubToken,
         required: true,
-        theme: { prompt: { primary: 'green' } },
+        // theme removed, not a valid property
       })
 
       if (token) return token
-    } catch (error) {
+    } catch {
       console.log('Invalid token, please try again.')
     }
   }
 }
 
 // Validate GitHub token by attempting to authenticate
-async function validateGithubToken(token) {
+async function validateGithubToken(token: string) {
   const octokit = new Octokit({ auth: token })
   try {
     await octokit.rest.users.getAuthenticated()
@@ -41,12 +42,12 @@ async function promptForGithubUsername() {
   return input({
     message: 'Enter GitHub username',
     required: true,
-    theme: { prompt: { primary: 'green' } },
+    // theme removed, not a valid property
   })
 }
 
 // Fetch gist content by URL
-async function fetchGistContent(file) {
+async function fetchGistContent(file: { raw_url: string }) {
   const response = await fetch(file.raw_url)
   if (!response.ok) {
     throw new Error(
@@ -57,7 +58,9 @@ async function fetchGistContent(file) {
 }
 
 // Save gist files to the filesystem
-async function saveGistsToFilesystem(username, gists) {
+type GistFile = { raw_url: string }
+type Gist = { id: string; files: Record<string, GistFile | unknown> }
+async function saveGistsToFilesystem(username: string, gists: Gist[]) {
   const userFolder = path.join(__dirname, 'output', username)
   mkdirSync(userFolder, { recursive: true })
 
@@ -68,8 +71,8 @@ async function saveGistsToFilesystem(username, gists) {
 
       const saveFilePromises = Object.entries(gist.files).map(
         async ([filename, file]) => {
-          const formattedFilename = filename.replace(/[^a-zA-Z0-9-_\.]/g, '_')
-          const content = await fetchGistContent(file)
+          const formattedFilename = filename.replace(/[^a-zA-Z0-9-_.]/g, '_')
+          const content = await fetchGistContent(file as GistFile)
           const filePath = path.join(gistFolder, formattedFilename)
           writeFileSync(filePath, content)
         }
@@ -83,15 +86,15 @@ async function saveGistsToFilesystem(username, gists) {
 }
 
 // Fetch all gists for the given username
-async function fetchAllUserGists(octokit, username, totalGists) {
+async function fetchAllUserGists(
+  octokit: Octokit,
+  username: string,
+  totalGists: number
+) {
   const totalPages = Math.ceil(totalGists / 100)
   const fetchPagePromises = Array.from({ length: totalPages }, (_, index) =>
     octokit.rest.gists
-      .listForUser({
-        username,
-        per_page: 100,
-        page: index + 1,
-      })
+      .listForUser({ username, per_page: 100, page: index + 1 })
       .catch((error) => {
         console.error(`Error fetching page ${index + 1}:`, error.message)
         return { data: [] } // Return an empty array for this page
@@ -112,9 +115,7 @@ async function main() {
     const username = await promptForGithubUsername()
 
     const octokit = new Octokit({ auth: token })
-    const { data: user } = await octokit.rest.users.getByUsername({
-      username,
-    })
+    const { data: user } = await octokit.rest.users.getByUsername({ username })
 
     console.log(`Found user: ${user.name || user.login}`)
     const allGists = await fetchAllUserGists(
@@ -124,14 +125,22 @@ async function main() {
     )
 
     await saveGistsToFilesystem(username, allGists)
-  } catch (error) {
-    console.error('An error occurred:', error.message)
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('An error occurred:', error.message)
+    } else {
+      console.error('An unknown error occurred:', error)
+    }
     process.exit(1)
   }
 }
 
 // Run the main function
-main().catch((error) => {
-  console.error('Unhandled error:', error.message)
+main().catch((error: unknown) => {
+  if (error instanceof Error) {
+    console.error('Unhandled error:', error.message)
+  } else {
+    console.error('Unhandled unknown error:', error)
+  }
   process.exit(1)
 })
